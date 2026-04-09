@@ -34,6 +34,10 @@ Retry safety:
 Task state is stored in DB; retries do not create duplicates.
 Celery automatically retries tasks with exponential backoff if a worker fails mid-task.
 
+## Trade-offs
+
+In this system, strict priority enforcement is achieved by using separate queues for HIGH, MEDIUM, and LOW priority tasks. This guarantees that high-priority tasks are always processed first, even with multiple workers, but it adds slight configuration complexity compared to a single-queue approach. The retry mechanism is limited to three attempts per task to balance reliability with system load—allowing more retries would improve fault tolerance but could overload the system. Concurrency handling relies on transactional database updates combined with Celery’s **acks_late=True**, which prevents duplicate task execution but introduces minor latency. Worker crash recovery ensures that tasks marked **IN_PROGRESS** are safely reprocessed if a worker fails, though this can cause small delays in task completion. Finally, the system simulates a 30% random failure rate to test retry robustness. While this improves resilience testing, it introduces non-determinism, meaning task outcomes may vary slightly during testing.
+
 ## Setup
 
 1. **Install Requirements:**
